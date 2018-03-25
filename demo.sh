@@ -66,7 +66,6 @@ echo -----Phase 3: Share keys-----
 for i in $@
 do
 	sshpass -f pass ssh-copy-id -i ~/.ssh/id_rsa.pub $i
-	let count=count+1
 done
 
 echo -----Phase Demo: proof ssh conection-----
