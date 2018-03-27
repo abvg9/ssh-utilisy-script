@@ -19,6 +19,7 @@ do
 	read option
 done
 
+
 if [ $option == "y" ]
 then
 	echo -----Phase 2: Saved keys-----
@@ -40,49 +41,50 @@ then
 	known_hosts=$(cat known_hosts)
 	authorized_keys=$(cat authorized_keys)
 	cd ..
+	cd ssh-utility-script
 
-	for i in $@
+	while read host
 	do
-		clave=$(ssh-keyscan -t rsa $i)
+		read pass
+		clave=$(ssh-keyscan -t rsa $host)
 		if [[ $known_hosts =~ "$clave" ]]
 		then
-			echo $i Already exist in known_hosts
+			echo $host Already exists in known_hosts
 		else
 			echo $clave >> ~/.ssh/known_hosts
 		fi
 
 		if [[ $authorized_keys =~ "$clave" ]]
 		then
-			echo $i Alredy exist in authorices_keys
+			echo $host Alredy exists in authorized_keys
 		else
 			echo $clave >> ~/.ssh/authorized_keys
 		fi
-	done
+	done < netInf
 else
 	echo -----Phase 2: Omited-----
 fi
 
 echo -----Phase 3: Share keys-----
-for i in $@
+while read host
 do
-	sshpass -f pass ssh-copy-id -i ~/.ssh/id_rsa.pub $i
-done
+	read pass
+	sshpass -p $pass ssh-copy-id -i ~/.ssh/id_rsa.pub $host
+done < netInf
 
-echo -----Phase Demo: proof ssh conection-----
+echo -----Phase Demo: Verify ssh conection-----
 
 if [ ! -d proof ]
 then
 	mkdir proof
 fi
 
-for i in $@
+while read host
 do
-	echo Copying proof directory in machine $i
-	scp -r proof $i:/root
-	echo Check that the directory was created before continuing
-	read -p "Press enter to continue"
-	ssh $i 'rmdir /root/proof'
-
-done
+	read pass
+	echo Copying proof directory in machine $host
+	scp -r proof $host:/root
+done < netInf
+echo If everything went well, there should be a directory called proof on each of the hosts, check it
 
 rmdir proof
